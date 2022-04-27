@@ -44,3 +44,7 @@ php artisan make:model -c -f -m --api -R --test Product
 1. Is necessary change 3 `//@todo` lines in your tests files generated;
 2. Write your attributes in `migrations` and `Model`(fillable and on swagger block) and `Requests`;
 3. Create the route on `routes/api.php`
+
+# WIP
+
+I'm working in php file to simplify attributes definition, news soon.

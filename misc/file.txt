@@ -1,0 +1,4 @@
+name:string
+phone:integer
+person_uuid:uuid
+is_enabled:boolean
