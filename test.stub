@@ -45,7 +45,7 @@ class {{ class }} extends TestCase
 
         $response = $this->get($this->path);
         $response->assertOk();
-        $response->assertJsonCount(10);
+        $response->assertJsonCount(10, 'data');
     }
 
     public function test_delete_{{ class }}()
