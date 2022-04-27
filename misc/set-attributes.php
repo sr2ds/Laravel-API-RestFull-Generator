@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * WIP: This not working yet.
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
  * The goals is rewrite files with correct attributes to full automatically rest api
  * Usage: php setup-atributes.php path/to/file.txt ModelName
@@ -15,7 +16,7 @@ function main($argv)
 
     echo "Setuping files to be modified...\n";
     $modelName = $argv[2];
-    setupMigration($attributes, $modelName);
+    writeMigration($attributes, $modelName);
 }
 
 function checkNumOfParams($argv)
@@ -33,7 +34,7 @@ function checkNumOfParams($argv)
  * attribute_name:attribute_type(eloquent_compatible)
  *  name:string
  *  creator_uuid:uuid
- *  description:text
+ *  description:text:required
  */
 function getAttributeListFromFile($filePath)
 {
@@ -50,6 +51,7 @@ function getAttributeListFromFile($filePath)
 
         $line = explode(":", $line);
 
+        // @todo: improve this to get dinamic params better
         $attributes[] = [
             "name" => trim($line[0]),
             "type" => trim($line[1]),
@@ -60,42 +62,58 @@ function getAttributeListFromFile($filePath)
     return $attributes;
 }
 
-function setupMigration($attributes, $modelName)
+function writeMigration($attributes, $modelName)
 {
-    $snakeModel = snakeCase($modelName);
+    $nbSpace = str_repeat(" ", 12);
+    $contentToWrite = getContentToWriteMigration($attributes, $nbSpace);
+    $filePath = getMigrationPath($modelName);
 
+    $file = fopen($filePath, "r");
+    $fileContent = fread($file, filesize($filePath));
+    fclose($file);
+
+    $fileContent = str_replace("$nbSpace\$table->timestamps();", $contentToWrite, $fileContent);
+
+    $file = fopen($filePath, "w");
+    fwrite($file, $fileContent);
+    fclose($file);
+}
+
+function getContentToWriteMigration($attributes, $formatationSpaces)
+{
     foreach ($attributes as $key => $attribute) {
         $attributeName = $attribute["name"];
         $attributeType = $attribute["type"];
         $attributeRequired = $attribute["required"];
 
-        $linesToFile[$key] = "\$table->$attributeType('$attributeName');";
+        $linesToFile[$key] = "$formatationSpaces\$table->$attributeType('$attributeName')";
         if ($attributeRequired) {
-            $linesToFile[$key] .= "->required();";
+            $linesToFile[$key] .= "->required()";
         }
-        $linesToFile[$key] .= ";\n";
+        $linesToFile[$key] .= ";";
     }
 
-    $linesToFile[] = "\$table->timestamps();\n";
+    $linesToFile[] = "$formatationSpaces\$table->timestamps();";
+    $content = implode("\n", $linesToFile);
 
+    return $content;
+}
+
+function getMigrationPath($modelName)
+{
+    $snakeModel = snakeCase($modelName);
     $migrations = glob("database/migrations/*$snakeModel*.php");
-    if (count($migrations) > 1) {
-        echo "Error: More than one migration found.\n";
+    if (!count($migrations)) {
+        echo "Error: Migration not found.\n";
         exit(1);
     }
 
     $filePath = $migrations[0];
     if (file_exists($filePath)) {
-        $file = fopen($filePath, "r");
-        $fileContent = fread($file, filesize($filePath));
-        fclose($file);
-
-        // @todo: implode lines to file correctly and setup space tabs
-        $fileContent = str_replace("\$table->timestamps();", $linesToFile, $fileContent);
-
-        $file = fopen($filePath, "w");
-        fwrite($file, $fileContent);
-        fclose($file);
+        return $filePath;
+    } else {
+        echo "Error: FilePath can not be read: $filePath.\n";
+        exit(1);
     }
 }
 
