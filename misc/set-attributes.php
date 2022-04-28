@@ -22,6 +22,8 @@ function main($argv)
     writeMigration($attributes, $modelName);
     writeModel($attributes, $modelName);
     writeFactory($attributes, $modelName);
+    writeStoreRequest($attributes, $modelName);
+    writeUpdateRequest($attributes, $modelName);
 }
 
 function checkNumOfParams($argv)
@@ -207,6 +209,68 @@ function getDataTypeToFactory($type)
         "text" => "text",
     ];
     return $types[$type];
+}
+
+function writeStoreRequest($attributes, $modelName)
+{
+    $nbSpace = str_repeat(" ", 12);
+    $contentToWrite = getContentToWriteStoreRequest($attributes, $nbSpace);
+    $filePath = "app/Http/Requests/Store$modelName" . "Request.php";
+
+    $file = fopen($filePath, "r");
+    $fileContent = fread($file, filesize($filePath));
+
+    fclose($file);
+
+    $fileContent = str_replace("$nbSpace//", $contentToWrite, $fileContent);
+
+    $file = fopen($filePath, "w");
+    fwrite($file, $fileContent);
+    fclose($file);
+}
+
+function getContentToWriteStoreRequest($attributes, $formatationSpaces)
+{
+    $content = [];
+    foreach ($attributes as $key => $attribute) {
+        $content[$key] = "$formatationSpaces'data.$attribute[name]' => '$attribute[type]";
+        if ($attribute["required"]) {
+            $content[$key] .= "|required";
+        }
+        $content[$key] .= "'";
+    }
+    return  implode(",\n", $content) . ",";
+}
+
+function writeUpdateRequest($attributes, $modelName)
+{
+    $nbSpace = str_repeat(" ", 12);
+    $contentToWrite = getContentToWriteUpdateRequest($attributes, $nbSpace);
+    $filePath = "app/Http/Requests/Update$modelName" . "Request.php";
+
+    $file = fopen($filePath, "r");
+    $fileContent = fread($file, filesize($filePath));
+
+    fclose($file);
+
+    $fileContent = str_replace("$nbSpace//", $contentToWrite, $fileContent);
+
+    $file = fopen($filePath, "w");
+    fwrite($file, $fileContent);
+    fclose($file);
+}
+
+function getContentToWriteUpdateRequest($attributes, $formatationSpaces)
+{
+    $content = [];
+    foreach ($attributes as $key => $attribute) {
+        $content[$key] = "$formatationSpaces'data.$attribute[name]' => 'sometimes|$attribute[type]";
+        if ($attribute["required"]) {
+            $content[$key] .= "|required";
+        }
+        $content[$key] .= "'";
+    }
+    return  implode(",\n", $content) . ",";
 }
 
 main($argv);
