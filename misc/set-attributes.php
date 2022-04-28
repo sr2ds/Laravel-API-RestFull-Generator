@@ -10,13 +10,18 @@
 function main($argv)
 {
     checkNumOfParams($argv);
+    $modelName = $argv[2];
+
+    echo "Run PHP artisan...";
+    shell_exec("php artisan make:model -c -f -m --api -R --test $modelName");
 
     echo "Getting attributes from file...\n";
     $attributes = getAttributeListFromFile($argv[1]);
 
     echo "Setuping files to be modified...\n";
-    $modelName = $argv[2];
     writeMigration($attributes, $modelName);
+    writeModel($attributes, $modelName);
+    writeFactory($attributes, $modelName);
 }
 
 function checkNumOfParams($argv)
@@ -102,7 +107,10 @@ function getContentToWriteMigration($attributes, $formatationSpaces)
 function getMigrationPath($modelName)
 {
     $snakeModel = snakeCase($modelName);
-    $migrations = glob("database/migrations/*$snakeModel*.php");
+
+    // @todo: fix to plural and singular name
+    $snakeModelWithoutLastWord = substr($snakeModel, 0, -1);
+    $migrations = glob("database/migrations/*$snakeModelWithoutLastWord*.php");
     if (!count($migrations)) {
         echo "Error: Migration not found.\n";
         exit(1);
@@ -121,6 +129,84 @@ function snakeCase($word)
 {
     # thanks Jan Jakeš: https://stackoverflow.com/a/19533226/6394559
     return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $word)), '_');
+}
+
+
+function writeModel($attributes, $modelName)
+{
+    //@todo: write swagger attributes
+    //@todo: write casts to integer attributes
+
+    $nbSpace = str_repeat(" ", 8);
+    $contentToWrite = getContentToWriteModelFillable($attributes, $nbSpace);
+    $filePath = "app/Models/$modelName.php";
+
+    $file = fopen($filePath, "r");
+    $fileContent = fread($file, filesize($filePath));
+
+    fclose($file);
+
+    $fileContent = str_replace("'created_at',", $contentToWrite, $fileContent);
+
+    $file = fopen($filePath, "w");
+    fwrite($file, $fileContent);
+    fclose($file);
+}
+
+function getContentToWriteModelFillable($attributes, $formatationSpaces)
+{
+    $fillable = [];
+    foreach ($attributes as $key => $attribute) {
+        $fillable[] = "'" . $attribute["name"] . "'";
+    }
+
+    $content = implode(",\n$formatationSpaces", $fillable) . ",\n";
+    $content .= "$formatationSpaces'created_at',";
+
+    return $content;
+}
+
+function writeFactory($attributes, $modelName)
+{
+    $nbSpace = str_repeat(" ", 12);
+    $contentToWrite = getContentToWriteFactory($attributes, $nbSpace);
+    $filePath = "database/factories/$modelName" . "Factory.php";
+
+    $file = fopen($filePath, "r");
+    $fileContent = fread($file, filesize($filePath));
+
+    fclose($file);
+
+    $fileContent = str_replace("$nbSpace//", $contentToWrite, $fileContent);
+
+    $file = fopen($filePath, "w");
+    fwrite($file, $fileContent);
+    fclose($file);
+}
+
+function getContentToWriteFactory($attributes, $formatationSpaces)
+{
+    $content = [];
+    foreach ($attributes as $key => $attribute) {
+        $dataType = getDataTypeToFactory($attribute['type']);
+        $content[] = "$formatationSpaces'" . $attribute["name"] . "' => \$this->faker->$dataType()";
+    }
+
+    return  implode(",\n", $content) . ",";
+}
+
+function getDataTypeToFactory($type)
+{
+    $types = [
+        "string" => "word",
+        "integer" => "randomDigit",
+        "boolean" => "boolean",
+        "uuid" => "uuid",
+        "date" => "dateTime",
+        "datetime" => "dateTime",
+        "text" => "text",
+    ];
+    return $types[$type];
 }
 
 main($argv);
