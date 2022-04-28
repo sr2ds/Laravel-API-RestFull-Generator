@@ -1,7 +1,7 @@
 <?php
 
 /**
- * WIP: This not working yet.
+ * WIP: This not fully working yet.
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
  * The goals is rewrite files with correct attributes to full automatically rest api
  * Usage: php setup-atributes.php stubs/misc/file.txt Example
