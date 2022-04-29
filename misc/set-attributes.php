@@ -23,9 +23,11 @@ function main($argv)
 
 	// Loop writing all files from settings array
 	foreach ($settings as $setting) {
-		$contentToWrite = $setting['get_content_to_write']($attributes, $setting['spaces']);
-		$fileContent = getFileContent($setting['path']);
-		$fileContent = str_replace($setting['replace_rule'], $contentToWrite, $fileContent);
+		$fileContent = str_replace(
+			$setting['replace_rule'],
+			$setting['get_content_to_write']($attributes, $setting['spaces'], $modelName),
+			getFileContent($setting['path'])
+		);
 		writeContentInFile($setting['path'], $fileContent);
 	}
 
@@ -166,6 +168,18 @@ function getContentToWriteUpdateRequest($attributes, $nbSpace)
 	return getContentToWriteRequest($attributes, $nbSpace, true);
 }
 
+function getContentToWriteTest($attributes, $nbSpace, $modelName)
+{
+	$content = [];
+	$modelLowerCase = strtolower($modelName);
+	$modelPascalCase = str_replace('_', '-', snakeCase($modelName));
+
+	$content[] = $nbSpace . "private \$path = 'api/$modelPascalCase" . "s';"; // bad way to pluralize, make this better
+	$content[] .= $nbSpace . "private \$model = \\App\\Models\\$modelName::class;";
+	$content[] .= $nbSpace . "private \$table = '$modelLowerCase" . "s';"; // bad way to pluralize, make this better
+	return implode("\n", $content);
+}
+
 function getFileContent($path)
 {
 	$file = fopen($path, "r");
@@ -233,7 +247,13 @@ function getFileSettings($modelName, $file = null)
 			"spaces" => str_repeat(" ", 12),
 			"get_content_to_write" => "getContentToWriteMigration",
 			"replace_rule" => str_repeat(" ", 12) . "\$table->timestamps();",
-		]
+		],
+		"TEST" => [
+			"path" => "tests/Feature/Models/" . $modelName . "Test.php",
+			"spaces" => str_repeat(" ", 4),
+			"get_content_to_write" => "getContentToWriteTest",
+			"replace_rule" => str_repeat(" ", 4) . "// 'PATH_MODEL_TABLE'",
+		],
 	];
 	return $file ? $files[$file] : $files;
 }
