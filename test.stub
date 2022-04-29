@@ -6,9 +6,7 @@ use Tests\TestCase;
 
 class {{ class }} extends TestCase
 {
-    private $path = '/api/{{ class }}'; //@todo: set correct path
-    private $model = \App\Models\{{ class }}::class; //@todo: set correct model class
-    private $table = '{{ class }}'; //@todo: set correct table
+    // 'PATH_MODEL_TABLE'
 
     public function test_create_{{ class }}()
     {
