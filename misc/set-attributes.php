@@ -73,65 +73,49 @@ function getAttributeListFromFile($filePath)
 
 function writeMigration($attributes, $modelName)
 {
-	$nbSpace = str_repeat(" ", 12);
-	$contentToWrite = getContentToWriteMigration($attributes, $nbSpace);
-	$filePath = getMigrationPath($modelName);
-
-	$fileContent = getFileContent($filePath);
-	$fileContent = str_replace("$nbSpace\$table->timestamps();", $contentToWrite, $fileContent);
-
-	writeContentInFile($filePath, $fileContent);
+	$settings = getFileSettings("MIGRATION", $modelName);
+	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
+	$fileContent = getFileContent($settings['path']);
+	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
+	writeContentInFile($settings['path'], $fileContent);
 }
 
 function writeModel($attributes, $modelName)
 {
 	//@todo: write swagger attributes
 	//@todo: write casts to integer attributes
-
-	$nbSpace = str_repeat(" ", 8);
-	$contentToWrite = getContentToWriteModelFillable($attributes, $nbSpace);
-	$filePath = "app/Models/$modelName.php";
-
-	$fileContent = getFileContent($filePath);
-	$fileContent = str_replace("'created_at',", $contentToWrite, $fileContent);
-
-	writeContentInFile($filePath, $fileContent);
+	$settings = getFileSettings("MODEL", $modelName);
+	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
+	$fileContent = getFileContent($settings['path']);
+	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
+	writeContentInFile($settings['path'], $fileContent);
 }
 
 function writeFactory($attributes, $modelName)
 {
-	$nbSpace = str_repeat(" ", 12);
-	$contentToWrite = getContentToWriteFactory($attributes, $nbSpace);
-	$filePath = "database/factories/$modelName" . "Factory.php";
-
-	$fileContent = getFileContent($filePath);
-	$fileContent = str_replace("$nbSpace//", $contentToWrite, $fileContent);
-
-	writeContentInFile($filePath, $fileContent);
+	$settings = getFileSettings("FACTORY", $modelName);
+	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
+	$fileContent = getFileContent($settings['path']);
+	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
+	writeContentInFile($settings['path'], $fileContent);
 }
 
 function writeStoreRequest($attributes, $modelName)
 {
-	$nbSpace = str_repeat(" ", 12);
-	$contentToWrite = getContentToWriteRequest($attributes, $nbSpace);
-	$filePath = "app/Http/Requests/Store$modelName" . "Request.php";
-
-	$fileContent = getFileContent($filePath);
-	$fileContent = str_replace("$nbSpace//", $contentToWrite, $fileContent);
-
-	writeContentInFile($filePath, $fileContent);
+	$settings = getFileSettings("STORE_REQUEST", $modelName);
+	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
+	$fileContent = getFileContent($settings['path']);
+	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
+	writeContentInFile($settings['path'], $fileContent);
 }
 
 function writeUpdateRequest($attributes, $modelName)
 {
-	$nbSpace = str_repeat(" ", 12);
-	$contentToWrite = getContentToWriteRequest($attributes, $nbSpace, true);
-	$filePath = "app/Http/Requests/Update$modelName" . "Request.php";
-
-	$fileContent = getFileContent($filePath);
-	$fileContent = str_replace("$nbSpace//", $contentToWrite, $fileContent);
-
-	writeContentInFile($filePath, $fileContent);
+	$settings = getFileSettings("UPDATE_REQUEST", $modelName);
+	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces'], true);
+	$fileContent = getFileContent($settings['path']);
+	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
+	writeContentInFile($settings['path'], $fileContent);
 }
 
 function getContentToWriteMigration($attributes, $nbSpace)
@@ -249,6 +233,43 @@ function writeContentInFile($path, $content)
 function snakeCase($word)
 {
 	return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $word)), '_');
+}
+
+function getFileSettings($file, $modelName)
+{
+	$files = [
+		"MODEL" => [
+			"path" => "app/Models/$modelName.php",
+			"spaces" => str_repeat(" ", 8),
+			"get_content_to_write" => "getContentToWriteModelFillable",
+			"replace_rule"=> "'created_at',",
+		],
+		"FACTORY" => [
+			"path" => "database/factories/$modelName" . "Factory.php",
+			"spaces" => str_repeat(" ", 12),
+			"get_content_to_write" => "getContentToWriteFactory",
+			"replace_rule"=> str_repeat(" ", 12) . "//",
+		],
+		"STORE_REQUEST" => [
+			"path" => "app/Http/Requests/Store$modelName" . "Request.php",
+			"spaces" => str_repeat(" ", 12),
+			"get_content_to_write" => "getContentToWriteRequest",
+			"replace_rule"=> str_repeat(" ", 12) . "//",
+		],
+		"UPDATE_REQUEST" => [
+			"path" => "app/Http/Requests/Update$modelName" . "Request.php",
+			"spaces" => str_repeat(" ", 12),
+			"get_content_to_write" => "getContentToWriteRequest",
+			"replace_rule"=> str_repeat(" ", 12) . "//",
+		],
+		"MIGRATION" => [
+			"path" => getMigrationPath($modelName),
+			"spaces" => str_repeat(" ", 12),
+			"get_content_to_write" => "getContentToWriteMigration",
+			"replace_rule"=> str_repeat(" ", 12) . "\$table->timestamps();",
+		]
+	];
+	return $files[$file];
 }
 
 main($argv);
