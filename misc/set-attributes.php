@@ -16,15 +16,18 @@ function main($argv)
 	shell_exec("php artisan make:model -c -f -m --api -R --test $modelName");
 
 	echo "Getting attributes from file...\n";
-	$attributes = getAttributeListFromFile($argv[1]);
+	$attributes = getAttributesListFromFile($argv[1]);
 
 	echo "Changing files ...\n";
+	$settings = getFileSettings($modelName);
 
-	writeMigration($attributes, $modelName);
-	writeModel($attributes, $modelName);
-	writeFactory($attributes, $modelName);
-	writeStoreRequest($attributes, $modelName);
-	writeUpdateRequest($attributes, $modelName);
+	// Loop writing all files from settings array
+	foreach ($settings as $setting) {
+		$contentToWrite = $setting['get_content_to_write']($attributes, $setting['spaces']);
+		$fileContent = getFileContent($setting['path']);
+		$fileContent = str_replace($setting['replace_rule'], $contentToWrite, $fileContent);
+		writeContentInFile($setting['path'], $fileContent);
+	}
 
 	echo "Done! Now you need add route to your api and fix test file @todo lines.\n";
 }
@@ -46,7 +49,7 @@ function checkNumOfParams($argv)
  *  creator_uuid:uuid
  *  description:text:required
  */
-function getAttributeListFromFile($filePath)
+function getAttributesListFromFile($filePath)
 {
 	if (!file_exists($filePath)) {
 		echo "Error: File not found.\n";
@@ -71,51 +74,25 @@ function getAttributeListFromFile($filePath)
 	return $attributes;
 }
 
-function writeMigration($attributes, $modelName)
+function getMigrationPath($modelName)
 {
-	$settings = getFileSettings("MIGRATION", $modelName);
-	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
-	$fileContent = getFileContent($settings['path']);
-	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
-	writeContentInFile($settings['path'], $fileContent);
-}
+	$snakeModel = snakeCase($modelName);
 
-function writeModel($attributes, $modelName)
-{
-	//@todo: write swagger attributes
-	//@todo: write casts to integer attributes
-	$settings = getFileSettings("MODEL", $modelName);
-	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
-	$fileContent = getFileContent($settings['path']);
-	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
-	writeContentInFile($settings['path'], $fileContent);
-}
+	// @todo: fix to plural and singular name
+	$snakeModelWithoutLastWord = substr($snakeModel, 0, -1);
+	$migrations = glob("database/migrations/*$snakeModelWithoutLastWord*.php");
+	if (!count($migrations)) {
+		echo "Error: Migration not found.\n";
+		exit(1);
+	}
 
-function writeFactory($attributes, $modelName)
-{
-	$settings = getFileSettings("FACTORY", $modelName);
-	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
-	$fileContent = getFileContent($settings['path']);
-	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
-	writeContentInFile($settings['path'], $fileContent);
-}
-
-function writeStoreRequest($attributes, $modelName)
-{
-	$settings = getFileSettings("STORE_REQUEST", $modelName);
-	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces']);
-	$fileContent = getFileContent($settings['path']);
-	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
-	writeContentInFile($settings['path'], $fileContent);
-}
-
-function writeUpdateRequest($attributes, $modelName)
-{
-	$settings = getFileSettings("UPDATE_REQUEST", $modelName);
-	$contentToWrite = $settings['get_content_to_write']($attributes, $settings['spaces'], true);
-	$fileContent = getFileContent($settings['path']);
-	$fileContent = str_replace($settings['replace_rule'], $contentToWrite, $fileContent);
-	writeContentInFile($settings['path'], $fileContent);
+	$filePath = $migrations[0];
+	if (file_exists($filePath)) {
+		return $filePath;
+	} else {
+		echo "Error: FilePath can not be read: $filePath.\n";
+		exit(1);
+	}
 }
 
 function getContentToWriteMigration($attributes, $nbSpace)
@@ -136,27 +113,6 @@ function getContentToWriteMigration($attributes, $nbSpace)
 	$content = implode("\n", $linesToFile);
 
 	return $content;
-}
-
-function getMigrationPath($modelName)
-{
-	$snakeModel = snakeCase($modelName);
-
-	// @todo: fix to plural and singular name
-	$snakeModelWithoutLastWord = substr($snakeModel, 0, -1);
-	$migrations = glob("database/migrations/*$snakeModelWithoutLastWord*.php");
-	if (!count($migrations)) {
-		echo "Error: Migration not found.\n";
-		exit(1);
-	}
-
-	$filePath = $migrations[0];
-	if (file_exists($filePath)) {
-		return $filePath;
-	} else {
-		echo "Error: FilePath can not be read: $filePath.\n";
-		exit(1);
-	}
 }
 
 function getContentToWriteModelFillable($attributes, $nbSpace)
@@ -183,20 +139,6 @@ function getContentToWriteFactory($attributes, $nbSpace)
 	return implode(",\n", $content) . ",";
 }
 
-function getDataTypeToFactory($type)
-{
-	$types = [
-		"string" => "word",
-		"integer" => "randomDigit",
-		"boolean" => "boolean",
-		"uuid" => "uuid",
-		"date" => "dateTime",
-		"datetime" => "dateTime",
-		"text" => "text",
-	];
-	return $types[$type];
-}
-
 function getContentToWriteRequest($attributes, $nbSpace, $sometimes = false)
 {
 	$content = [];
@@ -212,6 +154,16 @@ function getContentToWriteRequest($attributes, $nbSpace, $sometimes = false)
 		$content[$key] .= "'";
 	}
 	return implode(",\n", $content) . ",";
+}
+
+function getContentToWriteStoreRequest($attributes, $nbSpace)
+{
+	return getContentToWriteRequest($attributes, $nbSpace, false);
+}
+
+function getContentToWriteUpdateRequest($attributes, $nbSpace)
+{
+	return getContentToWriteRequest($attributes, $nbSpace, true);
 }
 
 function getFileContent($path)
@@ -235,41 +187,55 @@ function snakeCase($word)
 	return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $word)), '_');
 }
 
-function getFileSettings($file, $modelName)
+function getDataTypeToFactory($type)
+{
+	$types = [
+		"string" => "word",
+		"integer" => "randomDigit",
+		"boolean" => "boolean",
+		"uuid" => "uuid",
+		"date" => "dateTime",
+		"datetime" => "dateTime",
+		"text" => "text",
+	];
+	return $types[$type];
+}
+
+function getFileSettings($modelName, $file = null)
 {
 	$files = [
 		"MODEL" => [
 			"path" => "app/Models/$modelName.php",
 			"spaces" => str_repeat(" ", 8),
 			"get_content_to_write" => "getContentToWriteModelFillable",
-			"replace_rule"=> "'created_at',",
+			"replace_rule" => "'created_at',",
 		],
 		"FACTORY" => [
 			"path" => "database/factories/$modelName" . "Factory.php",
 			"spaces" => str_repeat(" ", 12),
 			"get_content_to_write" => "getContentToWriteFactory",
-			"replace_rule"=> str_repeat(" ", 12) . "//",
+			"replace_rule" => str_repeat(" ", 12) . "//",
 		],
 		"STORE_REQUEST" => [
 			"path" => "app/Http/Requests/Store$modelName" . "Request.php",
 			"spaces" => str_repeat(" ", 12),
-			"get_content_to_write" => "getContentToWriteRequest",
-			"replace_rule"=> str_repeat(" ", 12) . "//",
+			"get_content_to_write" => "getContentToWriteStoreRequest",
+			"replace_rule" => str_repeat(" ", 12) . "//",
 		],
 		"UPDATE_REQUEST" => [
 			"path" => "app/Http/Requests/Update$modelName" . "Request.php",
 			"spaces" => str_repeat(" ", 12),
-			"get_content_to_write" => "getContentToWriteRequest",
-			"replace_rule"=> str_repeat(" ", 12) . "//",
+			"get_content_to_write" => "getContentToWriteUpdateRequest",
+			"replace_rule" => str_repeat(" ", 12) . "//",
 		],
 		"MIGRATION" => [
 			"path" => getMigrationPath($modelName),
 			"spaces" => str_repeat(" ", 12),
 			"get_content_to_write" => "getContentToWriteMigration",
-			"replace_rule"=> str_repeat(" ", 12) . "\$table->timestamps();",
+			"replace_rule" => str_repeat(" ", 12) . "\$table->timestamps();",
 		]
 	];
-	return $files[$file];
+	return $file ? $files[$file] : $files;
 }
 
 main($argv);
