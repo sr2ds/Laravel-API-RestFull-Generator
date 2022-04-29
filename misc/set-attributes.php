@@ -4,7 +4,7 @@
  * WIP: This not fully working yet.
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
  * The goals is rewrite files with correct attributes to full automatically rest api
- * Usage: php setup-atributes.php stubs/misc/file.txt Example
+ * Usage: php stubs/misc/set-attributes.php stubs/misc/file.txt Example
  */
 
 function main($argv)
@@ -113,7 +113,7 @@ function writeFactory($attributes, $modelName)
 function writeStoreRequest($attributes, $modelName)
 {
 	$nbSpace = str_repeat(" ", 12);
-	$contentToWrite = getContentToWriteStoreRequest($attributes, $nbSpace);
+	$contentToWrite = getContentToWriteRequest($attributes, $nbSpace);
 	$filePath = "app/Http/Requests/Store$modelName" . "Request.php";
 
 	$fileContent = getFileContent($filePath);
@@ -125,7 +125,7 @@ function writeStoreRequest($attributes, $modelName)
 function writeUpdateRequest($attributes, $modelName)
 {
 	$nbSpace = str_repeat(" ", 12);
-	$contentToWrite = getContentToWriteUpdateRequest($attributes, $nbSpace);
+	$contentToWrite = getContentToWriteRequest($attributes, $nbSpace, true);
 	$filePath = "app/Http/Requests/Update$modelName" . "Request.php";
 
 	$fileContent = getFileContent($filePath);
@@ -213,24 +213,15 @@ function getDataTypeToFactory($type)
 	return $types[$type];
 }
 
-function getContentToWriteStoreRequest($attributes, $nbSpace)
+function getContentToWriteRequest($attributes, $nbSpace, $sometimes = false)
 {
 	$content = [];
 	foreach ($attributes as $key => $attribute) {
-		$content[$key] = "$nbSpace'data.$attribute[name]' => '$attribute[type]";
-		if ($attribute["required"]) {
-			$content[$key] .= "|required";
+		if ($sometimes) {
+			$content[$key] = "$nbSpace'data.$attribute[name]' => 'sometimes|$attribute[type]";
+		} else {
+			$content[$key] = "$nbSpace'data.$attribute[name]' => '$attribute[type]";
 		}
-		$content[$key] .= "'";
-	}
-	return implode(",\n", $content) . ",";
-}
-
-function getContentToWriteUpdateRequest($attributes, $nbSpace)
-{
-	$content = [];
-	foreach ($attributes as $key => $attribute) {
-		$content[$key] = "$nbSpace'data.$attribute[name]' => 'sometimes|$attribute[type]";
 		if ($attribute["required"]) {
 			$content[$key] .= "|required";
 		}
