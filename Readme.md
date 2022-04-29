@@ -17,7 +17,7 @@ Is required that your application has L5-Swagger setuped to correct run.
 ```
 mkdir stubs
 cd stubs
-git clone https://github.com/sr2ds/laravel-api-stubs .
+git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 ```
 
 ## 2. Setup your schema attributes like file `stubs/misc/file.txt`
