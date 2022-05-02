@@ -1,6 +1,6 @@
 <?php
 
-/**
+/** 
  * WIP: This works but need improvements
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
  * The goals is rewrite files with correct attributes to full automatically rest api
@@ -12,7 +12,7 @@ function main($argv)
 	checkNumOfParams($argv);
 	$modelName = $argv[2];
 
-	echo "Creating default files with PHP artisan...\n";
+	echo "\n\nCreating default files with PHP artisan...\n";
 	shell_exec("php artisan make:model -c -f -m --api -R --test $modelName");
 
 	echo "Getting attributes from file...\n";
@@ -31,7 +31,9 @@ function main($argv)
 		writeContentInFile($setting['path'], $fileContent);
 	}
 
-	echo "Done! Now you need add route to your api and fix test file @todo lines.\n";
+	echo "Done! \n";
+	echo "Setup your file routes/api.php: \n\n";
+	echo "Route::apiResource('" . str_replace('_', '-', snakeCase($modelName)) . "s', $modelName" . "Controller::class);\n\n";
 }
 
 function checkNumOfParams($argv)
