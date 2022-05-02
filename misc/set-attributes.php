@@ -119,6 +119,7 @@ function getContentToWriteMigration($attributes, $nbSpace)
 
 function getContentToWriteModelFillable($attributes, $nbSpace)
 {
+	sleep(1);
 	$content = [];
 	foreach ($attributes as $key => $attribute) {
 		$content[$key] = "'" . $attribute["name"] . "'";
@@ -126,6 +127,23 @@ function getContentToWriteModelFillable($attributes, $nbSpace)
 
 	$content = implode(",\n$nbSpace", $content) . ",\n";
 	$content .= "$nbSpace'created_at',";
+
+	return $content;
+}
+
+function getContentToWriteModelCasts($attributes, $nbSpace)
+{
+	sleep(1);
+	$contentAttr = [];
+	foreach ($attributes as $key => $attribute) {
+		if ($attribute["type"] == 'integer') {
+			$contentAttr[$key] = $nbSpace . "'" . $attribute["name"] . "' => '" . $attribute["type"] . "'";
+		}
+	}
+
+	$content = "protected \$casts = [\n";
+	$content .= implode(",\n$nbSpace", $contentAttr) . ",\n";
+	$content .= str_repeat(" ", 4) . "];";
 
 	return $content;
 }
@@ -218,17 +236,23 @@ function getDataTypeToFactory($type)
 function getFileSettings($modelName, $file = null)
 {
 	$files = [
-		"MODEL" => [
+		"MODEL_CASTS" => [
 			"path" => "app/Models/$modelName.php",
 			"spaces" => str_repeat(" ", 8),
-			"get_content_to_write" => "getContentToWriteModelFillable",
-			"replace_rule" => "'created_at',",
+			"get_content_to_write" => "getContentToWriteModelCasts",
+			"replace_rule" => "protected \$casts = [];",
 		],
 		"FACTORY" => [
 			"path" => "database/factories/$modelName" . "Factory.php",
 			"spaces" => str_repeat(" ", 12),
 			"get_content_to_write" => "getContentToWriteFactory",
 			"replace_rule" => str_repeat(" ", 12) . "//",
+		],
+		"MODEL_FILLABLE" => [
+			"path" => "app/Models/$modelName.php",
+			"spaces" => str_repeat(" ", 8),
+			"get_content_to_write" => "getContentToWriteModelFillable",
+			"replace_rule" => "'created_at',",
 		],
 		"STORE_REQUEST" => [
 			"path" => "app/Http/Requests/Store$modelName" . "Request.php",
@@ -254,6 +278,7 @@ function getFileSettings($modelName, $file = null)
 			"get_content_to_write" => "getContentToWriteTest",
 			"replace_rule" => str_repeat(" ", 4) . "// 'PATH_MODEL_TABLE'",
 		],
+		
 	];
 	return $file ? $files[$file] : $files;
 }

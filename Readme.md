@@ -30,10 +30,9 @@ git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 
 ## TODO
 
-1. Allow multiple replaces by file;
-2. Setup to write model casts;
-3. Setup Swagger Attributes;
-4. Improve and increment more data types
+1. Setup Swagger Attributes;
+2. Improve and increment more data types
+3. Refactor
 
 ## Extra Help
 
