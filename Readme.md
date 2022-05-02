@@ -30,9 +30,8 @@ git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 
 ## TODO
 
-1. Setup Swagger Attributes;
-2. Improve and increment more data types
-3. Refactor
+1. Improve and increment more data types
+2. Refactor
 
 ## Extra Help
 

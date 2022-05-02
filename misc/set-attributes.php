@@ -1,7 +1,7 @@
 <?php
 
 /**
- * WIP: This not fully working yet.
+ * WIP: This works but need improvements
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
  * The goals is rewrite files with correct attributes to full automatically rest api
  * Usage: php stubs/misc/set-attributes.php stubs/misc/file.txt Example
@@ -119,7 +119,6 @@ function getContentToWriteMigration($attributes, $nbSpace)
 
 function getContentToWriteModelFillable($attributes, $nbSpace)
 {
-	sleep(1);
 	$content = [];
 	foreach ($attributes as $key => $attribute) {
 		$content[$key] = "'" . $attribute["name"] . "'";
@@ -133,7 +132,6 @@ function getContentToWriteModelFillable($attributes, $nbSpace)
 
 function getContentToWriteModelCasts($attributes, $nbSpace)
 {
-	sleep(1);
 	$contentAttr = [];
 	foreach ($attributes as $key => $attribute) {
 		if ($attribute["type"] == 'integer') {
@@ -146,6 +144,15 @@ function getContentToWriteModelCasts($attributes, $nbSpace)
 	$content .= str_repeat(" ", 4) . "];";
 
 	return $content;
+}
+
+function getContentToWriteModelSwagger($attributes, $nbSpace, $modelName)
+{
+	$content[] = " *   @OA\Property(type=\"integer\",description=\"id of {$modelName}\",title=\"id\",property=\"id\",example=\"1\",readOnly=\"true\")";
+	foreach ($attributes as $key => $attribute) {
+		$content[$key] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
+	}
+	return implode(",\n", $content) . ',';
 }
 
 function getContentToWriteFactory($attributes, $nbSpace)
@@ -260,6 +267,12 @@ function getFileSettings($modelName, $file = null)
 			"get_content_to_write" => "getContentToWriteStoreRequest",
 			"replace_rule" => str_repeat(" ", 12) . "//",
 		],
+		"MODEL_SWAGGER" => [
+			"path" => "app/Models/$modelName.php",
+			"spaces" => str_repeat(" ", 8),
+			"get_content_to_write" => "getContentToWriteModelSwagger",
+			"replace_rule" => ' *   @OA\Property(type="integer",description="id of ' . $modelName . '",title="id",property="id",example="1",readOnly="true"),',
+		],
 		"UPDATE_REQUEST" => [
 			"path" => "app/Http/Requests/Update$modelName" . "Request.php",
 			"spaces" => str_repeat(" ", 12),
@@ -278,7 +291,7 @@ function getFileSettings($modelName, $file = null)
 			"get_content_to_write" => "getContentToWriteTest",
 			"replace_rule" => str_repeat(" ", 4) . "// 'PATH_MODEL_TABLE'",
 		],
-		
+
 	];
 	return $file ? $files[$file] : $files;
 }
