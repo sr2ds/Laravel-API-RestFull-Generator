@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Support\Str;
+
+require __DIR__.'/../../vendor/autoload.php';
+
 /** 
  * WIP: This works but need improvements
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
@@ -32,8 +36,10 @@ function main($argv)
 	}
 
 	echo "Done! \n";
+	
+	$routeName = str_replace('_', '-', Str::snake(Str::pluralStudly(class_basename($modelName))));
 	echo "Setup your file routes/api.php: \n\n";
-	echo "Route::apiResource('" . str_replace('_', '-', snakeCase($modelName)) . "s', $modelName" . "Controller::class);\n\n";
+	echo "Route::apiResource('$routeName', $modelName" . "Controller::class);\n\n";
 }
 
 function checkNumOfParams($argv)
@@ -80,11 +86,9 @@ function getAttributesListFromFile($filePath)
 
 function getMigrationPath($modelName)
 {
-	$snakeModel = snakeCase($modelName);
+	$migrationName = Str::snake(Str::pluralStudly(class_basename($modelName)));
+	$migrations = glob("database/migrations/*$migrationName" . "_table.php");
 
-	// @todo: fix to plural and singular name
-	$snakeModelWithoutLastWord = substr($snakeModel, 0, -1);
-	$migrations = glob("database/migrations/*$snakeModelWithoutLastWord*.php");
 	if (!count($migrations)) {
 		echo "Error: Migration not found.\n";
 		exit(1);
@@ -198,12 +202,12 @@ function getContentToWriteUpdateRequest($attributes, $nbSpace)
 function getContentToWriteTest($attributes, $nbSpace, $modelName)
 {
 	$content = [];
-	$modelLowerCase = strtolower($modelName);
-	$modelPascalCase = str_replace('_', '-', snakeCase($modelName));
+	$tableName = Str::snake(Str::pluralStudly(class_basename($modelName)));
+	$routeName = str_replace('_', '-', $tableName);
 
-	$content[] = $nbSpace . "private \$path = 'api/$modelPascalCase" . "s';"; // bad way to pluralize, make this better
+	$content[] = $nbSpace . "private \$path = 'api/$routeName';";
 	$content[] .= $nbSpace . "private \$model = \\App\\Models\\$modelName::class;";
-	$content[] .= $nbSpace . "private \$table = '$modelLowerCase" . "s';"; // bad way to pluralize, make this better
+	$content[] .= $nbSpace . "private \$table = '$tableName';";
 	return implode("\n", $content);
 }
 
@@ -221,11 +225,6 @@ function writeContentInFile($path, $content)
 	$file = fopen($path, "w");
 	fwrite($file, $content);
 	fclose($file);
-}
-
-function snakeCase($word)
-{
-	return ltrim(strtolower(preg_replace('/[A-Z]([A-Z](?![a-z]))*/', '_$0', $word)), '_');
 }
 
 function getDataTypeToFactory($type)
