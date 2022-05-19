@@ -156,7 +156,7 @@ function getContentToWriteModelSwagger($attributes, $nbSpace, $modelName)
 {
 	$content[] = " *   @OA\Property(type=\"integer\",description=\"id of {$modelName}\",title=\"id\",property=\"id\",example=\"1\",readOnly=\"true\")";
 	foreach ($attributes as $key => $attribute) {
-		$content[$key] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
+		$content[$key+1] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
 	}
 	return implode(",\n", $content) . ',';
 }
