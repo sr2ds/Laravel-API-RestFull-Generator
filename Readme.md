@@ -30,8 +30,12 @@ git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 
 ## TODO
 
-1. Improve and increment more data types
-2. Refactor
+* Fix casts generated when not has integer attribute 
+* Fix removed ID attribute on Swagger Docs 
+* Check path in Route Method generated on swagger doc
+* Improve getAttributesListFromFile to accept more attributes
+* Improve datatypes system fully
+* Refactor
 
 ## Extra Help
 
