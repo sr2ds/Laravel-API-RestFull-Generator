@@ -4,7 +4,7 @@ use Illuminate\Support\Str;
 
 require __DIR__.'/../../vendor/autoload.php';
 
-/** 
+/**
  * WIP: This works but need improvements
  * This file is part of the Laravel Stubs Custom API RestFull with OpenApi
  * The goals is rewrite files with correct attributes to full automatically rest api
@@ -36,7 +36,7 @@ function main($argv)
 	}
 
 	echo "Done! \n";
-	
+
 	$routeName = str_replace('_', '-', Str::snake(Str::pluralStudly(class_basename($modelName))));
 	echo "Setup your file routes/api.php: \n\n";
 	echo "Route::apiResource('$routeName', $modelName" . "Controller::class);\n\n";
@@ -141,12 +141,12 @@ function getContentToWriteModelCasts($attributes, $nbSpace)
 	$contentAttr = [];
 	foreach ($attributes as $key => $attribute) {
 		if ($attribute["type"] == 'integer') {
-			$contentAttr[$key] = $nbSpace . "'" . $attribute["name"] . "' => '" . $attribute["type"] . "'";
+			$contentAttr[$key] = $nbSpace . "'" . $attribute["name"] . "' => '" . $attribute["type"] . "',";
 		}
 	}
 
 	$content = "protected \$casts = [\n";
-	$content .= implode(",\n$nbSpace", $contentAttr) . ",\n";
+	$content .= implode(",\n$nbSpace", $contentAttr) . "\n";
 	$content .= str_repeat(" ", 4) . "];";
 
 	return $content;

@@ -30,7 +30,6 @@ git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 
 ## TODO
 
-* Fix casts generated when not has integer attribute 
 * Fix removed ID attribute on Swagger Docs 
 * Check path in Route Method generated on swagger doc
 * Improve getAttributesListFromFile to accept more attributes
