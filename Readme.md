@@ -30,7 +30,7 @@ git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 
 ## TODO
 
-* Check path in Route Method generated on swagger doc
+* 
 * Improve getAttributesListFromFile to accept more attributes
 * Improve datatypes system fully
 * Refactor
