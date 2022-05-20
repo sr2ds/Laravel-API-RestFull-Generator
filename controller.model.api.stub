@@ -14,7 +14,7 @@ class {{ class }} extends Controller
 {
     /**
      * @OA\Get(
-     *  path="/{{ modelVariable }}s",
+     *  path="/{{ modelVariable }}",
      *  operationId="index{{ model }}",
      *  tags={"{{ model }}s"},
      *  summary="Get list of {{ model }}",
@@ -32,14 +32,14 @@ class {{ class }} extends Controller
         ${{ modelVariable }}s = {{ model }}::all();
         return response()->json(['data' => ${{ modelVariable }}s]);
     }
-    
+
     /**
      * @OA\Post(
      *  operationId="store{{ model }}",
      *  summary="Insert a new {{ model }}",
      *  description="Insert a new {{ model }}",
      *  tags={"{{ model }}s"},
-     *  path="/{{ modelVariable }}s",
+     *  path="/{{ modelVariable }}",
      *  @OA\RequestBody(
      *    description="{{ model }} to create",
      *    required=true,
@@ -75,10 +75,10 @@ class {{ class }} extends Controller
         $data = {{ model }}::create($request->validated()['data']);
         return response()->json(['data' => $data], RESPONSE::HTTP_CREATED);
     }
-  
+
     /**
      * @OA\Get(
-     *   path="/{{ modelVariable }}s/{{{ modelVariable }}_id}",
+     *   path="/{{ modelVariable }}/{{{ modelVariable }}_id}",
      *   summary="Show a {{ model }} from his Id",
      *   description="Show a {{ model }} from his Id",
      *   operationId="show{{ model }}",
@@ -106,14 +106,14 @@ class {{ class }} extends Controller
     {
         return response()->json(['data' => ${{ modelVariable }}]);
     }
-   
+
     /**
      * @OA\Patch(
      *   operationId="update{{ model }}",
      *   summary="Update an existing {{ model }}",
      *   description="Update an existing {{ model }}",
      *   tags={"{{ model }}s"},
-     *   path="/{{ modelVariable }}s/{{{ modelVariable }}_id}",
+     *   path="/{{ modelVariable }}/{{{ modelVariable }}_id}",
      *   @OA\Parameter(ref="#/components/parameters/{{ model }}--id"),
      *   @OA\Response(response="204",description="No content"),
      *   @OA\RequestBody(
@@ -144,7 +144,7 @@ class {{ class }} extends Controller
 
     /**
      * @OA\Delete(
-     *  path="/{{ modelVariable }}s/{{{ modelVariable }}_id}",
+     *  path="/{{ modelVariable }}/{{{ modelVariable }}_id}",
      *  summary="Delete a {{ model }}",
      *  description="Delete a {{ model }}",
      *  operationId="destroy{{ model }}",

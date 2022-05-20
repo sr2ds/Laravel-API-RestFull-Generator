@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Str;
 
-require __DIR__.'/../../vendor/autoload.php';
+require __DIR__ . '/../../vendor/autoload.php';
 
 /**
  * WIP: This works but need improvements
@@ -73,12 +73,14 @@ function getAttributesListFromFile($filePath)
 		$line = trim($line);
 		$line = explode(":", $line);
 
-		// @todo: improve this to get dinamic params better
-		$attributes[] = [
-			"name" => trim($line[0]),
-			"type" => trim($line[1]),
-			"required" => isset($line[2]) ? trim($line[2]) : false,
-		];
+		if (count($line) > 1) {
+			// @todo: improve this to get dinamic params better
+			$attributes[] = [
+				"name" => trim($line[0]),
+				"type" => trim($line[1]),
+				"required" => isset($line[2]) ? trim($line[2]) : false,
+			];
+		}
 	}
 	fclose($file);
 	return $attributes;
@@ -156,10 +158,18 @@ function getContentToWriteModelSwagger($attributes, $nbSpace, $modelName)
 {
 	$content[] = " *   @OA\Property(type=\"integer\",description=\"id of {$modelName}\",title=\"id\",property=\"id\",example=\"1\",readOnly=\"true\")";
 	foreach ($attributes as $key => $attribute) {
-		$content[$key+1] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
+		$content[$key + 1] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
 	}
 	return implode(",\n", $content) . ',';
 }
+
+function getContentToWriteControllerSwaggerRoute($attributes, $nbSpace, $modelName)
+{
+	$tableName = Str::snake(Str::pluralStudly(class_basename($modelName)));
+	$routeName = str_replace('_', '-', $tableName);
+	return 'path="/' . $routeName;
+}
+
 
 function getContentToWriteFactory($attributes, $nbSpace)
 {
@@ -279,6 +289,12 @@ function getFileSettings($modelName, $file = null)
 			"spaces" => str_repeat(" ", 12),
 			"get_content_to_write" => "getContentToWriteUpdateRequest",
 			"replace_rule" => str_repeat(" ", 12) . "//",
+		],
+		"CONTROLLER_SWAGGER_ROUTES" => [
+			"path" => "app/Http/Controllers/$modelName" . "Controller.php",
+			"spaces" => str_repeat(" ", 4),
+			"get_content_to_write" => "getContentToWriteControllerSwaggerRoute",
+			"replace_rule" => 'path="/' . Str::camel($modelName),
 		],
 		"MIGRATION" => [
 			"path" => getMigrationPath($modelName),
