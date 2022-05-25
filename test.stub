@@ -33,8 +33,7 @@ class {{ class }} extends TestCase
         $newData = $this->model::factory()->make();
 
         $response = $this->putJson($this->path . '/' . $data->getRouteKey(), ['data' => $newData->toArray()]);
-        $response->assertOk();
-        $response->assertJsonFragment($newData->toArray());
+        $response->assertNoContent();
     }
 
     public function test_list_{{ class }}()

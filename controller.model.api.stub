@@ -139,7 +139,7 @@ class {{ class }} extends Controller
     public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }})
     {
         ${{ modelVariable }}->update($request->validated()['data']);
-        return response()->json(['data' => ${{ modelVariable }}->refresh()]);
+        return response()->noContent();
     }
 
     /**

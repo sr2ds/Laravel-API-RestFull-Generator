@@ -29,6 +29,7 @@ git clone https://github.com/sr2ds/Laravel-API-RestFull-Generator .
 ```
 
 ## TODO
+* Fix dateTime Factory to `$this->faker->dateTime()->format('Y-m-d H:i:s')` and validate to `date`
 * Refactor way to replace -> Today the replaces there are make by RULES, I to want change this to be by Files.
 * Improve getAttributesListFromFile to accept more attributes
 * Improve datatypes system fully
