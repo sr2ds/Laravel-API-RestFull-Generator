@@ -5,6 +5,8 @@ use {{ namespacedModel }};
 use {{ rootNamespace }}Http\Controllers\Controller;
 use {{ namespacedRequests }}
 use Illuminate\Http\Response;
+use App\Http\Requests\PaginatedRequest;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Class {{ class }}Controller
@@ -14,32 +16,44 @@ class {{ class }} extends Controller
 {
     /**
      * @OA\Get(
-     *  path="/{{ modelVariable }}",
      *  operationId="index{{ model }}",
+     *  path="/{{ modelVariable }}",
+     *  security={ { "BearerAuth": {} } },
      *  tags={"{{ model }}s"},
      *  summary="Get list of {{ model }}",
      *  description="Returns list of {{ model }}",
+     *  @OA\Parameter(ref="#/components/parameters/page"),
+     *  @OA\Parameter(ref="#/components/parameters/per_page"),
      *  @OA\Response(response=200, description="Successful operation",
-     *    @OA\JsonContent(ref="#/components/schemas/{{ model }}s"),
+     *    @OA\JsonContent(ref="#/components/schemas/{{ model }}sPaginated"),
      *  ),
      * )
      *
      * Display a listing of {{ model }}.
      * @return JsonResponse
      */
-    public function index()
+    public function index(PaginatedRequest $request)
     {
-        ${{ modelVariable }}s = {{ model }}::all();
-        return response()->json(['data' => ${{ modelVariable }}s]);
+        $validated = $request->validated();
+        $query = {{ model }}::query();
+        $result = $query->paginate($validated['per_page']);
+        $pagesCount = $result->lastPage();
+
+        if ($validated['page'] > $pagesCount) {
+            throw ValidationException::withMessages(['page' => "Page Out of Range"]);
+        }
+
+        return response()->json($result);
     }
 
     /**
      * @OA\Post(
      *  operationId="store{{ model }}",
+     *  path="/{{ modelVariable }}",
+     *  security={ { "BearerAuth": {} } },
      *  summary="Insert a new {{ model }}",
      *  description="Insert a new {{ model }}",
      *  tags={"{{ model }}s"},
-     *  path="/{{ modelVariable }}",
      *  @OA\RequestBody(
      *    description="{{ model }} to create",
      *    required=true,

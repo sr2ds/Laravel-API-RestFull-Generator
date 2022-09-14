@@ -51,6 +51,7 @@ class {{ class }} extends TestCase
         $this->delete($this->path . '/' . $data->getRouteKey())
             ->assertNoContent();
 
-        $this->assertDatabaseCount($this->table, 0);
+        $this->assertDatabaseCount($this->table, 1);
+        $this->assertSoftDeleted($data);
     }
 }

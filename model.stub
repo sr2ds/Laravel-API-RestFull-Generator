@@ -3,6 +3,7 @@ namespace {{ namespace }};
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @OA\Schema(
@@ -22,10 +23,19 @@ use Illuminate\Database\Eloquent\Model;
  *   )
  * )
  * 
+ * @OA\Schema(
+ *   schema="{{ class }}sPaginated",
+ *   title="{{ class }}s paginated",
+ *   allOf={
+ *      @OA\Schema(ref="#/components/schemas/Pagination"),
+ *      @OA\Schema(ref="#/components/schemas/{{ class }}s"),
+ *   }
+ * )
+ * 
  * @OA\Parameter(
  *      parameter="{{ class }}--id",
  *      in="path",
- *      name="{{ class }}_id",
+ *      name="__NAME_CLASS_VAR_PARAM_ID__",
  *      required=true,
  *      description="Id of {{ class }}",
  *      @OA\Schema(
@@ -38,6 +48,7 @@ use Illuminate\Database\Eloquent\Model;
 class {{ class }} extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'created_at',

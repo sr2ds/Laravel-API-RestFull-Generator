@@ -120,6 +120,7 @@ function getContentToWriteMigration($attributes, $nbSpace)
 	}
 
 	$linesToFile[] = "$nbSpace\$table->timestamps();";
+	$linesToFile[] = "$nbSpace\$table->softDeletes();";
 	$content = implode("\n", $linesToFile);
 
 	return $content;
@@ -161,6 +162,13 @@ function getContentToWriteModelSwagger($attributes, $nbSpace, $modelName)
 		$content[$key + 1] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
 	}
 	return implode(",\n", $content) . ',';
+}
+
+function getContentToWriteModelSwaggerUrlParameter($attributes, $nbSpace, $modelName)
+{
+	$tableName = Str::snake(class_basename($modelName));
+	$routeName = str_replace('_', '-', $tableName);
+	return "{$routeName}_id";
 }
 
 function getContentToWriteControllerSwaggerRoute($attributes, $nbSpace, $modelName)
@@ -289,6 +297,12 @@ function getFileSettings($modelName, $file = null)
 			"spaces" => str_repeat(" ", 12),
 			"get_content_to_write" => "getContentToWriteUpdateRequest",
 			"replace_rule" => str_repeat(" ", 12) . "//",
+		],
+		"MODEL_SWAGGER_URL_PARAMETER" => [
+			"path" => "app/Models/$modelName.php",
+			"spaces" => str_repeat(" ", 8),
+			"get_content_to_write" => "getContentToWriteModelSwaggerUrlParameter",
+			"replace_rule" => '__NAME_CLASS_VAR_PARAM_ID__',
 		],
 		"CONTROLLER_SWAGGER_ROUTES" => [
 			"path" => "app/Http/Controllers/$modelName" . "Controller.php",
