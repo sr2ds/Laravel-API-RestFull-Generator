@@ -8,17 +8,17 @@ class {{ class }} extends TestCase
 {
     // 'PATH_MODEL_TABLE'
 
-    public function test_create_{{ class }}()
+    public function testCreate{{ class }}()
     {
         $data = $this->model::factory()->make();
 
-        $this->postJson($this->path, ['data' => $data->toArray()])
+        $this->postJson($this->path, $data->toArray())
             ->assertCreated();
 
         $this->assertDatabaseHas($this->table, $data->toArray());
     }
 
-    public function test_show_{{ class }}()
+    public function testShow{{ class }}()
     {
         $data = $this->model::factory()->create();
 
@@ -27,16 +27,16 @@ class {{ class }} extends TestCase
         $response->assertJsonFragment($data->toArray());
     }
 
-    public function test_update_{{ class }}()
+    public function testUpdate{{ class }}()
     {
         $data = $this->model::factory()->create();
         $newData = $this->model::factory()->make();
 
-        $response = $this->putJson($this->path . '/' . $data->getRouteKey(), ['data' => $newData->toArray()]);
+        $response = $this->putJson($this->path . '/' . $data->getRouteKey(), $newData->toArray());
         $response->assertNoContent();
     }
 
-    public function test_list_{{ class }}()
+    public function testList{{ class }}()
     {
         $this->model::factory()->count(10)->create();
 
@@ -45,7 +45,7 @@ class {{ class }} extends TestCase
         $response->assertJsonCount(10, 'data');
     }
 
-    public function test_delete_{{ class }}()
+    public function testDelete{{ class }}()
     {
         $data = $this->model::factory()->create();
         $this->delete($this->path . '/' . $data->getRouteKey())

@@ -9,7 +9,7 @@ use App\Http\Requests\PaginatedRequest;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Class {{ class }}Controller
+ * Class {{ class }}
  * @package  {{ namespace }}
  */
 class {{ class }} extends Controller
@@ -60,23 +60,12 @@ class {{ class }} extends Controller
      *    @OA\MediaType(
      *      mediaType="application/json",
      *      @OA\Schema(
-     *      @OA\Property(
-     *      title="data",
-     *      property="data",
-     *      type="object",
-     *      ref="#/components/schemas/{{ model }}")
+     *      ref="#/components/schemas/{{ model }}"
      *     )
      *    )
      *  ),
      *  @OA\Response(response="201",description="{{ model }} created",
-     *     @OA\JsonContent(
-     *      @OA\Property(
-     *       title="data",
-     *       property="data",
-     *       type="object",
-     *       ref="#/components/schemas/{{ model }}"
-     *      ),
-     *    ),
+     *     @OA\JsonContent(ref="#/components/schemas/{{ model }}"),
      *  ),
      *  @OA\Response(response=422,description="Validation exception"),
      * )
@@ -86,8 +75,9 @@ class {{ class }} extends Controller
      */
     public function store({{ storeRequest }} $request)
     {
-        $data = {{ model }}::create($request->validated()['data']);
-        return response()->json(['data' => $data], RESPONSE::HTTP_CREATED);
+        $input = $request->validated();
+        $data = {{ model }}::create($input);
+        return response()->json($data, RESPONSE::HTTP_CREATED);
     }
 
     /**
@@ -99,17 +89,8 @@ class {{ class }} extends Controller
      *   operationId="show{{ model }}",
      *   tags={"{{ model }}s"},
      *   @OA\Parameter(ref="#/components/parameters/{{ model }}--id"),
-     *   @OA\Response(
-     *     response=200,
-     *     description="Successful operation",
-     *       @OA\JsonContent(
-     *       @OA\Property(
-     *       title="data",
-     *       property="data",
-     *       type="object",
-     *       ref="#/components/schemas/{{ model }}"
-     *       ),
-     *     ),
+     *   @OA\Response(response=200,description="Successful operation",
+     *     @OA\JsonContent(ref="#/components/schemas/{{ model }}"),
      *   ),
      *   @OA\Response(response="404",description="{{ model }} not found"),
      * )
@@ -119,7 +100,7 @@ class {{ class }} extends Controller
      */
     public function show({{ model }} ${{ modelVariable }})
     {
-        return response()->json(['data' => ${{ modelVariable }}]);
+        return response()->json(${{ modelVariable }});
     }
 
     /**
@@ -137,13 +118,7 @@ class {{ class }} extends Controller
      *     required=true,
      *     @OA\MediaType(
      *       mediaType="application/json",
-     *       @OA\Schema(
-     *        @OA\Property(
-     *        title="data",
-     *        property="data",
-     *        type="object",
-     *        ref="#/components/schemas/{{ model }}")
-     *      )
+     *       @OA\Schema(ref="#/components/schemas/{{ model }}")
      *     )
      *   )
      * )
@@ -154,7 +129,7 @@ class {{ class }} extends Controller
      */
     public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }})
     {
-        ${{ modelVariable }}->update($request->validated()['data']);
+        ${{ modelVariable }}->update($request->validated());
         return response()->noContent();
     }
 

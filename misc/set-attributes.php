@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Str;
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
 /**
  * WIP: This works but need improvements
@@ -10,45 +10,44 @@ require __DIR__ . '/../../vendor/autoload.php';
  * The goals is rewrite files with correct attributes to full automatically rest api
  * Usage: php stubs/misc/set-attributes.php stubs/misc/file.txt Example
  */
-
 function main($argv)
 {
-	checkNumOfParams($argv);
-	$modelName = $argv[2];
+    checkNumOfParams($argv);
+    $modelName = $argv[2];
 
-	echo "\n\nCreating default files with PHP artisan...\n";
-	shell_exec("php artisan make:model -c -f -m --api -R --test $modelName");
+    echo "\n\nCreating default files with PHP artisan...\n";
+    shell_exec("php artisan make:model -c -f -m --api -R --test $modelName");
 
-	echo "Getting attributes from file...\n";
-	$attributes = getAttributesListFromFile($argv[1]);
+    echo "Getting attributes from file...\n";
+    $attributes = getAttributesListFromFile($argv[1]);
 
-	echo "Changing files ...\n";
-	$settings = getFileSettings($modelName);
+    echo "Changing files ...\n";
+    $settings = getFileSettings($modelName);
 
-	// Loop writing all files from settings array
-	foreach ($settings as $setting) {
-		$fileContent = str_replace(
-			$setting['replace_rule'],
-			$setting['get_content_to_write']($attributes, $setting['spaces'], $modelName),
-			getFileContent($setting['path'])
-		);
-		writeContentInFile($setting['path'], $fileContent);
-	}
+    // Loop writing all files from settings array
+    foreach ($settings as $setting) {
+        $fileContent = str_replace(
+            $setting['replace_rule'],
+            $setting['get_content_to_write']($attributes, $setting['spaces'], $modelName),
+            getFileContent($setting['path'])
+        );
+        writeContentInFile($setting['path'], $fileContent);
+    }
 
-	echo "Done! \n";
+    echo "Done! \n";
 
-	$routeName = str_replace('_', '-', Str::snake(Str::pluralStudly(class_basename($modelName))));
-	echo "Setup your file routes/api.php: \n\n";
-	echo "Route::apiResource('$routeName', $modelName" . "Controller::class);\n\n";
+    $routeName = str_replace('_', '-', Str::snake(Str::pluralStudly(class_basename($modelName))));
+    echo "Setup your file routes/api.php: \n\n";
+    echo "Route::apiResource('$routeName', $modelName"."Controller::class);\n\n";
 }
 
 function checkNumOfParams($argv)
 {
-	if (count($argv) < 3) {
-		echo "Error: Missing parameters.\n";
-		echo "Usage: php setup-atributes.php path/to/file.txt ModelName\n";
-		exit(1);
-	}
+    if (count($argv) < 3) {
+        echo "Error: Missing parameters.\n";
+        echo "Usage: php setup-atributes.php path/to/file.txt ModelName\n";
+        exit(1);
+    }
 }
 
 /**
@@ -61,270 +60,277 @@ function checkNumOfParams($argv)
  */
 function getAttributesListFromFile($filePath)
 {
-	if (!file_exists($filePath)) {
-		echo "Error: File not found.\n";
-		exit(1);
-	}
+    if (! file_exists($filePath)) {
+        echo "Error: File not found.\n";
+        exit(1);
+    }
 
-	$file = fopen($filePath, "r");
-	$attributes = [];
-	while (!feof($file)) {
-		$line = fgets($file);
-		$line = trim($line);
-		$line = explode(":", $line);
+    $file = fopen($filePath, 'r');
+    $attributes = [];
+    while (! feof($file)) {
+        $line = fgets($file);
+        $line = trim($line);
+        $line = explode(':', $line);
 
-		if (count($line) > 1) {
-			// @todo: improve this to get dinamic params better
-			$attributes[] = [
-				"name" => trim($line[0]),
-				"type" => trim($line[1]),
-				"required" => isset($line[2]) ? trim($line[2]) : false,
-			];
-		}
-	}
-	fclose($file);
-	return $attributes;
+        if (count($line) > 1) {
+            // @todo: improve this to get dinamic params better
+            $attributes[] = [
+                'name' => trim($line[0]),
+                'type' => trim($line[1]),
+                'required' => isset($line[2]) ? trim($line[2]) : false,
+            ];
+        }
+    }
+    fclose($file);
+
+    return $attributes;
 }
 
 function getMigrationPath($modelName)
 {
-	$migrationName = Str::snake(Str::pluralStudly(class_basename($modelName)));
-	$migrations = glob("database/migrations/*$migrationName" . "_table.php");
+    $migrationName = Str::snake(Str::pluralStudly(class_basename($modelName)));
+    $migrations = glob("database/migrations/*$migrationName".'_table.php');
 
-	if (!count($migrations)) {
-		echo "Error: Migration not found.\n";
-		exit(1);
-	}
+    if (! count($migrations)) {
+        echo "Error: Migration not found.\n";
+        exit(1);
+    }
 
-	$filePath = $migrations[0];
-	if (file_exists($filePath)) {
-		return $filePath;
-	} else {
-		echo "Error: FilePath can not be read: $filePath.\n";
-		exit(1);
-	}
+    $filePath = $migrations[0];
+    if (file_exists($filePath)) {
+        return $filePath;
+    } else {
+        echo "Error: FilePath can not be read: $filePath.\n";
+        exit(1);
+    }
 }
 
 function getContentToWriteMigration($attributes, $nbSpace)
 {
-	foreach ($attributes as $key => $attribute) {
-		$attributeName = $attribute["name"];
-		$attributeType = $attribute["type"];
-		$attributeRequired = $attribute["required"];
+    foreach ($attributes as $key => $attribute) {
+        $attributeName = $attribute['name'];
+        $attributeType = $attribute['type'];
+        $attributeRequired = $attribute['required'];
 
-		$linesToFile[$key] = "$nbSpace\$table->$attributeType('$attributeName')";
-		if ($attributeRequired) {
-			$linesToFile[$key] .= "->required()";
-		}
-		$linesToFile[$key] .= ";";
-	}
+        $linesToFile[$key] = "$nbSpace\$table->$attributeType('$attributeName')";
+        if ($attributeRequired) {
+            $linesToFile[$key] .= '->required()';
+        }
+        $linesToFile[$key] .= ';';
+    }
 
-	$linesToFile[] = "$nbSpace\$table->timestamps();";
-	$linesToFile[] = "$nbSpace\$table->softDeletes();";
-	$content = implode("\n", $linesToFile);
+    $linesToFile[] = "$nbSpace\$table->timestamps();";
+    $linesToFile[] = "$nbSpace\$table->softDeletes();";
+    $content = implode("\n", $linesToFile);
 
-	return $content;
+    return $content;
 }
 
 function getContentToWriteModelFillable($attributes, $nbSpace)
 {
-	$content = [];
-	foreach ($attributes as $key => $attribute) {
-		$content[$key] = "'" . $attribute["name"] . "'";
-	}
+    $content = [];
+    foreach ($attributes as $key => $attribute) {
+        $content[$key] = "'".$attribute['name']."'";
+    }
 
-	$content = implode(",\n$nbSpace", $content) . ",\n";
-	$content .= "$nbSpace'created_at',";
+    $content = implode(",\n$nbSpace", $content).",\n";
+    $content .= "$nbSpace'created_at',";
 
-	return $content;
+    return $content;
 }
 
 function getContentToWriteModelCasts($attributes, $nbSpace)
 {
-	$contentAttr = [];
-	foreach ($attributes as $key => $attribute) {
-		if ($attribute["type"] == 'integer') {
-			$contentAttr[$key] = $nbSpace . "'" . $attribute["name"] . "' => '" . $attribute["type"] . "',";
-		}
-	}
+    $contentAttr = [];
+    foreach ($attributes as $key => $attribute) {
+        if ($attribute['type'] == 'integer') {
+            $contentAttr[$key] = $nbSpace."'".$attribute['name']."' => '".$attribute['type']."',";
+        }
+    }
 
-	$content = "protected \$casts = [\n";
-	$content .= implode(",\n$nbSpace", $contentAttr) . "\n";
-	$content .= str_repeat(" ", 4) . "];";
+    $content = "protected \$casts = [\n";
+    $content .= implode(",\n$nbSpace", $contentAttr)."\n";
+    $content .= str_repeat(' ', 4).'];';
 
-	return $content;
+    return $content;
 }
 
 function getContentToWriteModelSwagger($attributes, $nbSpace, $modelName)
 {
-	$content[] = " *   @OA\Property(type=\"integer\",description=\"id of {$modelName}\",title=\"id\",property=\"id\",example=\"1\",readOnly=\"true\")";
-	foreach ($attributes as $key => $attribute) {
-		$content[$key + 1] = " *   @OA\Property(type=\"{$attribute["type"]}\",description=\"{$attribute["name"]} of {$modelName}\",title=\"{$attribute["name"]}\",property=\"{$attribute["name"]}\")";
-	}
-	return implode(",\n", $content) . ',';
+    $content[] = " *   @OA\Property(type=\"integer\",description=\"id of {$modelName}\",title=\"id\",property=\"id\",example=\"1\",readOnly=\"true\")";
+    foreach ($attributes as $key => $attribute) {
+        $content[$key + 1] = " *   @OA\Property(type=\"{$attribute['type']}\",description=\"{$attribute['name']} of {$modelName}\",title=\"{$attribute['name']}\",property=\"{$attribute['name']}\")";
+    }
+
+    return implode(",\n", $content).',';
 }
 
 function getContentToWriteModelSwaggerUrlParameter($attributes, $nbSpace, $modelName)
 {
-	$tableName = Str::snake(class_basename($modelName));
-	$routeName = str_replace('_', '-', $tableName);
-	return "{$routeName}_id";
+    $tableName = Str::snake(class_basename($modelName));
+    $routeName = str_replace('_', '-', $tableName);
+
+    return "{$routeName}_id";
 }
 
 function getContentToWriteControllerSwaggerRoute($attributes, $nbSpace, $modelName)
 {
-	$tableName = Str::snake(Str::pluralStudly(class_basename($modelName)));
-	$routeName = str_replace('_', '-', $tableName);
-	return 'path="/' . $routeName;
-}
+    $tableName = Str::snake(Str::pluralStudly(class_basename($modelName)));
+    $routeName = str_replace('_', '-', $tableName);
 
+    return 'path="/'.$routeName;
+}
 
 function getContentToWriteFactory($attributes, $nbSpace)
 {
-	$content = [];
-	foreach ($attributes as $key => $attribute) {
-		$dataType = getDataTypeToFactory($attribute['type']);
-		$content[] = "$nbSpace'" . $attribute["name"] . "' => \$this->faker->$dataType()";
-	}
+    $content = [];
+    foreach ($attributes as $key => $attribute) {
+        $dataType = getDataTypeToFactory($attribute['type']);
+        $content[] = "$nbSpace'".$attribute['name']."' => \$this->faker->$dataType()";
+    }
 
-	return implode(",\n", $content) . ",";
+    return implode(",\n", $content).',';
 }
 
 function getContentToWriteRequest($attributes, $nbSpace, $sometimes = false)
 {
-	$content = [];
-	foreach ($attributes as $key => $attribute) {
-		if ($sometimes) {
-			$content[$key] = "$nbSpace'data.$attribute[name]' => 'sometimes|$attribute[type]";
-		} else {
-			$content[$key] = "$nbSpace'data.$attribute[name]' => '$attribute[type]";
-		}
-		if ($attribute["required"]) {
-			$content[$key] .= "|required";
-		}
-		$content[$key] .= "'";
-	}
-	return implode(",\n", $content) . ",";
+    $content = [];
+    foreach ($attributes as $key => $attribute) {
+        if ($sometimes) {
+            $content[$key] = "$nbSpace'$attribute[name]' => 'sometimes|$attribute[type]";
+        } else {
+            $content[$key] = "$nbSpace'$attribute[name]' => '$attribute[type]";
+        }
+        if ($attribute['required']) {
+            $content[$key] .= '|required';
+        }
+        $content[$key] .= "'";
+    }
+
+    return implode(",\n", $content).',';
 }
 
 function getContentToWriteStoreRequest($attributes, $nbSpace)
 {
-	return getContentToWriteRequest($attributes, $nbSpace, false);
+    return getContentToWriteRequest($attributes, $nbSpace, false);
 }
 
 function getContentToWriteUpdateRequest($attributes, $nbSpace)
 {
-	return getContentToWriteRequest($attributes, $nbSpace, true);
+    return getContentToWriteRequest($attributes, $nbSpace, true);
 }
 
 function getContentToWriteTest($attributes, $nbSpace, $modelName)
 {
-	$content = [];
-	$tableName = Str::snake(Str::pluralStudly(class_basename($modelName)));
-	$routeName = str_replace('_', '-', $tableName);
+    $content = [];
+    $tableName = Str::snake(Str::pluralStudly(class_basename($modelName)));
+    $routeName = str_replace('_', '-', $tableName);
 
-	$content[] = $nbSpace . "private \$path = 'api/$routeName';";
-	$content[] .= $nbSpace . "private \$model = \\App\\Models\\$modelName::class;";
-	$content[] .= $nbSpace . "private \$table = '$tableName';";
-	return implode("\n", $content);
+    $content[] = $nbSpace."private \$path = 'api/$routeName';";
+    $content[] .= $nbSpace."private \$model = \\App\\Models\\$modelName::class;";
+    $content[] .= $nbSpace."private \$table = '$tableName';";
+
+    return implode("\n", $content);
 }
 
 function getFileContent($path)
 {
-	$file = fopen($path, "r");
-	$fileContent = fread($file, filesize($path));
-	fclose($file);
+    $file = fopen($path, 'r');
+    $fileContent = fread($file, filesize($path));
+    fclose($file);
 
-	return $fileContent;
+    return $fileContent;
 }
 
 function writeContentInFile($path, $content)
 {
-	$file = fopen($path, "w");
-	fwrite($file, $content);
-	fclose($file);
+    $file = fopen($path, 'w');
+    fwrite($file, $content);
+    fclose($file);
 }
 
 function getDataTypeToFactory($type)
 {
-	$types = [
-		"string" => "word",
-		"integer" => "randomDigit",
-		"boolean" => "boolean",
-		"uuid" => "uuid",
-		"date" => "dateTime",
-		"datetime" => "dateTime",
-		"text" => "text",
-	];
-	return $types[$type];
+    $types = [
+        'string' => 'word',
+        'integer' => 'randomDigit',
+        'boolean' => 'boolean',
+        'uuid' => 'uuid',
+        'date' => 'dateTime',
+        'datetime' => 'dateTime',
+        'text' => 'text',
+    ];
+
+    return $types[$type];
 }
 
 function getFileSettings($modelName, $file = null)
 {
-	$files = [
-		"MODEL_CASTS" => [
-			"path" => "app/Models/$modelName.php",
-			"spaces" => str_repeat(" ", 8),
-			"get_content_to_write" => "getContentToWriteModelCasts",
-			"replace_rule" => "protected \$casts = [];",
-		],
-		"FACTORY" => [
-			"path" => "database/factories/$modelName" . "Factory.php",
-			"spaces" => str_repeat(" ", 12),
-			"get_content_to_write" => "getContentToWriteFactory",
-			"replace_rule" => str_repeat(" ", 12) . "//",
-		],
-		"MODEL_FILLABLE" => [
-			"path" => "app/Models/$modelName.php",
-			"spaces" => str_repeat(" ", 8),
-			"get_content_to_write" => "getContentToWriteModelFillable",
-			"replace_rule" => "'created_at',",
-		],
-		"STORE_REQUEST" => [
-			"path" => "app/Http/Requests/Store$modelName" . "Request.php",
-			"spaces" => str_repeat(" ", 12),
-			"get_content_to_write" => "getContentToWriteStoreRequest",
-			"replace_rule" => str_repeat(" ", 12) . "//",
-		],
-		"MODEL_SWAGGER" => [
-			"path" => "app/Models/$modelName.php",
-			"spaces" => str_repeat(" ", 8),
-			"get_content_to_write" => "getContentToWriteModelSwagger",
-			"replace_rule" => ' *   @OA\Property(type="integer",description="id of ' . $modelName . '",title="id",property="id",example="1",readOnly="true"),',
-		],
-		"UPDATE_REQUEST" => [
-			"path" => "app/Http/Requests/Update$modelName" . "Request.php",
-			"spaces" => str_repeat(" ", 12),
-			"get_content_to_write" => "getContentToWriteUpdateRequest",
-			"replace_rule" => str_repeat(" ", 12) . "//",
-		],
-		"MODEL_SWAGGER_URL_PARAMETER" => [
-			"path" => "app/Models/$modelName.php",
-			"spaces" => str_repeat(" ", 8),
-			"get_content_to_write" => "getContentToWriteModelSwaggerUrlParameter",
-			"replace_rule" => '__NAME_CLASS_VAR_PARAM_ID__',
-		],
-		"CONTROLLER_SWAGGER_ROUTES" => [
-			"path" => "app/Http/Controllers/$modelName" . "Controller.php",
-			"spaces" => str_repeat(" ", 4),
-			"get_content_to_write" => "getContentToWriteControllerSwaggerRoute",
-			"replace_rule" => 'path="/' . Str::camel($modelName),
-		],
-		"MIGRATION" => [
-			"path" => getMigrationPath($modelName),
-			"spaces" => str_repeat(" ", 12),
-			"get_content_to_write" => "getContentToWriteMigration",
-			"replace_rule" => str_repeat(" ", 12) . "\$table->timestamps();",
-		],
-		"TEST" => [
-			"path" => "tests/Feature/Models/" . $modelName . "Test.php",
-			"spaces" => str_repeat(" ", 4),
-			"get_content_to_write" => "getContentToWriteTest",
-			"replace_rule" => str_repeat(" ", 4) . "// 'PATH_MODEL_TABLE'",
-		],
+    $files = [
+        'MODEL_CASTS' => [
+            'path' => "app/Models/$modelName.php",
+            'spaces' => str_repeat(' ', 8),
+            'get_content_to_write' => 'getContentToWriteModelCasts',
+            'replace_rule' => 'protected $casts = [];',
+        ],
+        'FACTORY' => [
+            'path' => "database/factories/$modelName".'Factory.php',
+            'spaces' => str_repeat(' ', 12),
+            'get_content_to_write' => 'getContentToWriteFactory',
+            'replace_rule' => str_repeat(' ', 12).'//',
+        ],
+        'MODEL_FILLABLE' => [
+            'path' => "app/Models/$modelName.php",
+            'spaces' => str_repeat(' ', 8),
+            'get_content_to_write' => 'getContentToWriteModelFillable',
+            'replace_rule' => "'created_at',",
+        ],
+        'STORE_REQUEST' => [
+            'path' => "app/Http/Requests/Store$modelName".'Request.php',
+            'spaces' => str_repeat(' ', 12),
+            'get_content_to_write' => 'getContentToWriteStoreRequest',
+            'replace_rule' => str_repeat(' ', 12).'//',
+        ],
+        'MODEL_SWAGGER' => [
+            'path' => "app/Models/$modelName.php",
+            'spaces' => str_repeat(' ', 8),
+            'get_content_to_write' => 'getContentToWriteModelSwagger',
+            'replace_rule' => ' *   @OA\Property(type="integer",description="id of '.$modelName.'",title="id",property="id",example="1",readOnly="true"),',
+        ],
+        'UPDATE_REQUEST' => [
+            'path' => "app/Http/Requests/Update$modelName".'Request.php',
+            'spaces' => str_repeat(' ', 12),
+            'get_content_to_write' => 'getContentToWriteUpdateRequest',
+            'replace_rule' => str_repeat(' ', 12).'//',
+        ],
+        'MODEL_SWAGGER_URL_PARAMETER' => [
+            'path' => "app/Models/$modelName.php",
+            'spaces' => str_repeat(' ', 8),
+            'get_content_to_write' => 'getContentToWriteModelSwaggerUrlParameter',
+            'replace_rule' => '__NAME_CLASS_VAR_PARAM_ID__',
+        ],
+        'CONTROLLER_SWAGGER_ROUTES' => [
+            'path' => "app/Http/Controllers/$modelName".'Controller.php',
+            'spaces' => str_repeat(' ', 4),
+            'get_content_to_write' => 'getContentToWriteControllerSwaggerRoute',
+            'replace_rule' => 'path="/'.Str::camel($modelName),
+        ],
+        'MIGRATION' => [
+            'path' => getMigrationPath($modelName),
+            'spaces' => str_repeat(' ', 12),
+            'get_content_to_write' => 'getContentToWriteMigration',
+            'replace_rule' => str_repeat(' ', 12).'$table->timestamps();',
+        ],
+        'TEST' => [
+            'path' => 'tests/Feature/Models/'.$modelName.'Test.php',
+            'spaces' => str_repeat(' ', 4),
+            'get_content_to_write' => 'getContentToWriteTest',
+            'replace_rule' => str_repeat(' ', 4)."// 'PATH_MODEL_TABLE'",
+        ],
 
-	];
-	return $file ? $files[$file] : $files;
+    ];
+
+    return $file ? $files[$file] : $files;
 }
 
 main($argv);

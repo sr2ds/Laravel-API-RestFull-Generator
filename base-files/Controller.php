@@ -24,13 +24,13 @@ use Illuminate\Routing\Controller as BaseController;
  *         url="https://www.apache.org/licenses/LICENSE-2.0.html"
  *     )
  * )
- * 
+ *
  * @OA\Get(
  *     path="/health",
  *     description="Health Check Page",
  *     @OA\Response(response="default", description="")
  * )
- * 
+ *
  * @OA\Schema(
  *   schema="Paging",
  *   title="Paging",
@@ -63,17 +63,18 @@ use Illuminate\Routing\Controller as BaseController;
  *   @OA\Property(type="integer", title="to", property="to", example=1),
  *   @OA\Property(type="integer", title="total", property="total", example=1),
  * )
- * 
- * 
+ *
+ *
  * @OA\Parameter(parameter="page", in="query", name="page", required=false, description="number of page",
- *   @OA\Schema(type="integer", example="2")
+ *   @OA\Schema(type="integer", example="1")
  * ),
  * @OA\Parameter(parameter="per_page", in="query", name="per_page", required=false, description="number of items per page",
  *   @OA\Schema(type="integer", example="20")
  * )
- *
  */
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests;
+    use DispatchesJobs;
+    use ValidatesRequests;
 }

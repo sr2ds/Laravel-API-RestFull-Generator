@@ -23,7 +23,9 @@ class PaginatedRequest extends FormRequest
     protected function prepareForValidation()
     {
         foreach ($this->defaults() as $key => $defaultValue) {
-            if (!$this->has($key)) $this->merge([$key => $defaultValue]);
+            if (! $this->has($key)) {
+                $this->merge([$key => $defaultValue]);
+            }
         }
     }
 
@@ -35,16 +37,16 @@ class PaginatedRequest extends FormRequest
     public function rules()
     {
         return [
-            'page'        => 'sometimes|integer',
-            'per_page'    => 'sometimes|integer|min:10|max:100',
+            'page' => 'sometimes|integer',
+            'per_page' => 'sometimes|integer|min:10|max:100',
         ];
     }
 
     protected function defaults()
     {
         return [
-            'page'      => 1,
-            'per_page'  => config('services.pagination.default', 10),
+            'page' => 1,
+            'per_page' => config('services.pagination.default', 10),
         ];
     }
 }
